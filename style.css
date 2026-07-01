@@ -233,7 +233,7 @@ ul, ol { list-style: none; }
 }
 
 .logo-img {
-    height: 72px;
+    height: 80px;
     width: auto;
     object-fit: contain;
 }
@@ -1339,8 +1339,9 @@ ul, ol { list-style: none; }
 }
 
 .footer-logo {
-    height: 64px;
+    height: 80px;
     margin-bottom: 16px;
+    border-radius: 8px; /* Added slight radius in case jpeg has sharp corners */
 }
 
 .footer-brand p {
