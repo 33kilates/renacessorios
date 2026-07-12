@@ -21,6 +21,24 @@
     <link rel="icon" href="img/logo-ren.png" type="image/png">
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '6168961836458255');
+    // PageView é disparado no script de CAPI no final do body com event_id para desduplicação
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=6168961836458255&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -787,5 +805,52 @@
         window.addEventListener('resize', () => { topBarHeight = topBar.offsetHeight; });
     </script>
 
+    <!-- Rastreamento Híbrido (Pixel + CAPI) -->
+    <script>
+        function generateEventId() {
+            return 'evt_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+        
+        function getCookie(name) {
+            var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            if (match) return match[2];
+            return null;
+        }
+
+        function sendCAPIEvent(eventName, eventId) {
+            fetch('/.netlify/functions/meta_capi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_name: eventName,
+                    event_id: eventId,
+                    source_url: window.location.href,
+                    fbp: getCookie('_fbp'),
+                    fbc: getCookie('_fbc')
+                })
+            }).catch(err => console.error('CAPI Request Failed', err));
+        }
+
+        // Dispara PageView (Browser + Server) com eventID
+        var pageViewEventId = generateEventId();
+        if(typeof fbq === 'function') {
+            fbq('track', 'PageView', {}, { eventID: pageViewEventId });
+        }
+        sendCAPIEvent('PageView', pageViewEventId);
+
+        // Dispara Contact nos cliques de WhatsApp
+        document.addEventListener('DOMContentLoaded', function() {
+            var waLinks = document.querySelectorAll('a[href^="https://wa.me/"]');
+            waLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    var contactEventId = generateEventId();
+                    if(typeof fbq === 'function') {
+                        fbq('track', 'Contact', {}, { eventID: contactEventId });
+                    }
+                    sendCAPIEvent('Contact', contactEventId);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
